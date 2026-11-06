@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROVER • PRO TELEMETRY</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-color: #050502;
+            --card-bg: rgba(15, 15, 5, 0.9);
+            --primary: #ffd700;
+            --primary-glow: rgba(255, 215, 0, 0.4);
+            --secondary: #8b7500;
+            --text: #f0f0e0;
+            --danger: #ff1744;
+            --glass: rgba(255, 255, 255, 0.03);
+            --accent: #ffeb3b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.05) 0%, transparent 40%);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 95%;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            box-shadow: 0 0 100px rgba(0, 0, 0, 1), 0 0 30px rgba(255, 215, 0, 0.05);
+            backdrop-filter: blur(20px);
+        }
+
+        /* --- Header Section --- */
+        .dash-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px 20px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            background: linear-gradient(to bottom, #fff, var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .connection-panel {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            width: 150px;
+        }
+
+        button {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #fff;
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        /* --- Sidebar panels --- */
+        .panel {
+            background: rgba(255, 215, 0, 0.02);
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            border-radius: 1.5rem;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            border-left: 3px solid var(--primary);
+            padding-left: 10px;
+        }
+
+        /* --- Center Section (The Wheel) --- */
+        .viewport {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            transition: transform 0.1s ease-out;
+        }
+
+        .wheel-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px var(--primary-glow));
+        }
+
+        .wheel-inner-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .rpm-display {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .rpm-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin: 0;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .rpm-unit {
+            font-size: 0.6rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* --- Gauges --- */
+        .gauge-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            color: #888;
+        }
+
+        /* --- Pedal Box Layout --- */
+        .pedal-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            height: 120px;
+            margin-top: 15px;
+        }
+
+        .pedal-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pedal-track {
+            width: 30px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .pedal-fill {
+            width: 100%;
+            height: 0%;
+            transition: height 0.05s;
+        }
+
+        .pedal-fill.brake {
+            background: linear-gradient(0deg, #800, var(--danger));
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+
+        .pedal-fill.clutch {
+            background: linear-gradient(0deg, #333, #666);
+            box-shadow: 0 0 10px rgba(100, 100, 100, 0.3);
+        }
+
+        /* --- Telemetry Info --- */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .tele-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .tele-label {
+            font-size: 0.6rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .tele-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        /* --- Keyboard Visualization --- */
+        .kb-grid {
+            display: grid;
+            grid-template-areas: ". w ." "a s d";
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .key {
+            width: 50px;
+            height: 50px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: rgba(255, 215, 0, 0.2);
+            transition: 0.1s;
+        }
+
+        .key.active {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary-glow);
+            border-color: #fff;
+        }
+
+        .key-w {
+            grid-area: w;
+        }
+
+        .key-a {
+            grid-area: a;
+        }
+
+        .key-s {
+            grid-area: s;
+        }
+
+        .key-d {
+            grid-area: d;
+        }
+
+        /* --- Animations --- */
+        .pulse-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #aaa;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .pulse-dot.online {
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: glow 1s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                opacity: 0.5;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="dash-header">
+            <h1 class="logo">R.O.V.E.R</h1>
+            <div class="connection-panel">
+                <input type="text" id="ipAddress" placeholder="ENTER ESP32 IP..." value="192.168.1.">
+                <button id="connectBtn">INITIALIZE</button>
+                <button id="resyncBtn"
+                    style="background: rgba(255,215,0,0.1); border: 1px solid var(--primary); color: var(--primary); font-size: 0.6rem; padding: 5px 10px; margin-left: 10px;">RESYNC
+                    WHEEL</button>
+            </div>
+        </header>
+
+        <!-- Left Side: System State -->
+        <aside class="panel">
+            <div class="panel-section">
+                <div class="panel-title">System Status</div>
+                <div style="margin-top:15px; font-size: 0.9rem; font-weight: 600;">
+                    <span id="dot" class="pulse-dot"></span>
+                    <span id="status-text">DISCONNECTED</span>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Power Configuration</div>
+                <div class="slider-container" style="margin-top:15px">
+                    <div class="gauge-label">
+                        <span>Master Gain</span>
+                        <span id="speedValue">200</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="0" max="255" value="200"
+                        style="width:100%; accent-color: var(--primary);">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Control Mode</div>
+                <div class="telemetry-grid" style="margin-top:10px">
+                    <div class="tele-item">
+                        <div class="tele-label">Input</div>
+                        <div id="inputType" class="tele-value">KB</div>
+                    </div>
+                    <div class="tele-item">
+                        <div class="tele-label">Failsafe</div>
+                        <div class="tele-value" style="color: #0f0">ACTV</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center: Visual Telemetry -->
+        <main class="viewport">
+            <div class="wheel-container" id="wheelViz">
+                <svg class="wheel-svg" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="8" />
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#goldGradient)" stroke-width="4"
+                        stroke-dasharray="282" stroke-dashoffset="0" />
+                    <line x1="50" y1="50" x2="50" y2="10" stroke="var(--primary)" stroke-width="6"
+                        stroke-linecap="round" />
+                    <line x1="50" y1="50" x2="15" y2="75" stroke="var(--primary)" stroke-width="6"
+                        stroke-linecap="round" />
+                    <line x1="50" y1="50" x2="85" y2="75" stroke="var(--primary)" stroke-width="6"
+                        stroke-linecap="round" />
+                    <circle cx="50" cy="50" r="8" fill="#111" stroke="var(--primary)" stroke-width="2" />
+
+                    <defs>
+                        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--primary);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:var(--secondary);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="wheel-inner-info">
+                </div>
+            </div>
+
+            <div class="hint" style="margin-top: 40px;">
+                <span id="wheelLabel">STEERING ANGLE: 0°</span>
+            </div>
+        </main>
+
+        <!-- Right Side: Hardware Telemetry -->
+        <aside class="panel">
+            <div class="panel-section">
+                <div class="pedal-box">
+                    <!-- Clutch (Left) -->
+                    <div class="pedal-container">
+                        <div class="pedal-label" style="font-size: 0.55rem;">CLUTCH</div>
+                        <div class="pedal-track">
+                            <div id="clutchFill" class="pedal-fill clutch"
+                                style="background: linear-gradient(0deg, #444, #888);"></div>
+                        </div>
+                        <div id="clutchVal" style="font-size: 0.7rem; color: #666;">0%</div>
+                    </div>
+                    <!-- Brake (Center) -->
+                    <div class="pedal-container">
+                        <div class="pedal-label" style="font-size: 0.55rem;">BRAKE</div>
+                        <div class="pedal-track">
+                            <div id="brakeFill" class="pedal-fill brake"></div>
+                        </div>
+                        <div id="brakeVal" style="font-size: 0.7rem; color: #666;">0%</div>
+                    </div>
+                    <!-- Gas (Right) -->
+                    <div class="pedal-container">
+                        <div class="pedal-label" style="font-size: 0.55rem;">GAS</div>
+                        <div class="pedal-track">
+                            <div id="gasFill" class="pedal-fill"
+                                style="background: linear-gradient(0deg, var(--secondary), var(--primary));"></div>
+                        </div>
+                        <div id="gasVal" style="font-size: 0.7rem; color: #666;">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Engine Pulse</div>
+                <div class="rpm-display">
+                    <p class="rpm-num" id="rpmValue">0000</p>
+                    <p class="rpm-unit">EST. RPM</p>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Active Overrides</div>
+                <div class="kb-grid" style="margin-top:15px">
+                    <div id="key-w" class="key key-w">W</div>
+                    <div id="key-a" class="key key-a">A</div>
+                    <div id="key-s" class="key key-s">S</div>
+                    <div id="key-d" class="key key-d">D</div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Hardware ID</div>
+                <div id="wheelName" style="font-size: 0.65rem; color: #555; margin-top:10px; word-break: break-all;">
+                    WAITING FOR INPUT...
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        let socket = null;
+        let activeKeys = new Set();
+        let gamepadIndex = null;
+        let lastCmd = 'x';
+        let lastSteerState = 'x';
+        let lastSteerIndex = 50; // Center of 100 ticks
+        let heartbeatInterval = null;
+
+        // UI Elements
+        const statusText = document.getElementById('status-text');
+        const dot = document.getElementById('dot');
+        const connectBtn = document.getElementById('connectBtn');
+        const ipInput = document.getElementById('ipAddress');
+        const resyncBtn = document.getElementById('resyncBtn');
+        const speedValue = document.getElementById('speedValue');
+        const speedSlider = document.getElementById('speedSlider');
+        const wheelViz = document.getElementById('wheelViz');
+        const gasFill = document.getElementById('gasFill');
+        const brakeFill = document.getElementById('brakeFill');
+        const clutchFill = document.getElementById('clutchFill');
+        const gasValText = document.getElementById('gasVal');
+        const brakeValText = document.getElementById('brakeVal');
+        const clutchValText = document.getElementById('clutchVal');
+        const wheelLabel = document.getElementById('wheelLabel');
+        function id(name) {return document.getElementById(name);}
+
+        const wheelName = id('wheelName');
+        const inputType = id('inputType');
+
+        const keys = {
+            'w': id('key-w'),
+            'a': id('key-a'),
+            's': id('key-s'),
+            'd': id('key-d')
+        };
+
+        function connect() {
+            const ip = ipInput.value.trim();
+            if (!ip) return;
+
+            statusText.textContent = "ATTEMPTING SYNC...";
+            socket = new WebSocket(`ws://${ip}:81`);
+
+            socket.onopen = () => {
+                statusText.textContent = "CONNECTED • LIVE";
+                statusText.style.color = "var(--primary)";
+                dot.className = "pulse-dot online";
+                connectBtn.textContent = "TERMINATE";
+                connectBtn.className = "active";
+
+                sendSpeed(speedSlider.value);
+                heartbeatInterval = setInterval(() => {
+                    sendCommand('h'); // Keep connection alive
+                }, 1000);
+            };
+
+            socket.onmessage = (event) => {
+                const msg = event.data;
+                if (msg.startsWith('r')) {
+                    const rpm = msg.substring(1);
+                    id('rpmValue').textContent = rpm.padStart(4, '0');
+                }
+            };
+
+            socket.onclose = () => {
+                statusText.textContent = "DISCONNECTED";
+                statusText.style.color = "var(--danger)";
+                dot.className = "pulse-dot";
+                connectBtn.textContent = "INITIALIZE";
+                connectBtn.className = "";
+                socket = null;
+                clearInterval(heartbeatInterval);
+            };
+        }
+
+        connectBtn.onclick = () => {if (socket) socket.close(); else connect();};
+
+        function sendCommand(cmd) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(cmd);
+                lastCmd = cmd;
+            }
+        }
+
+        function sendSpeed(val) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send('v' + val);
+            }
+        }
+
+        speedSlider.oninput = function () {
+            speedValue.textContent = this.value;
+            sendSpeed(this.value);
+        };
+
+        // --- Keyboard Logic ---
+        window.onkeydown = (e) => {
+            const k = e.key.toLowerCase();
+            if (['w', 'a', 's', 'd'].includes(k) && !activeKeys.has(k)) {
+                activeKeys.add(k);
+                keys[k].classList.add('active');
+                sendCommand(k);
+                inputType.textContent = "KB";
+            }
+        };
+
+        window.onkeyup = (e) => {
+            const k = e.key.toLowerCase();
+            if (activeKeys.has(k)) {
+                activeKeys.delete(k);
+                keys[k].classList.remove('active');
+                if (activeKeys.size === 0) {
+                    sendCommand('x');
+                } else {
+                    const remaining = Array.from(activeKeys);
+                    sendCommand(remaining[remaining.length - 1]);
+                }
+            }
+        };
+
+        // --- Gamepad / Wheel Logic ---
+        function findGamepad() {
+            const gamepads = navigator.getGamepads();
+            gamepadIndex = null;
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i] && (gamepads[i].id.toLowerCase().includes('logitech') || gamepads[i].id.toLowerCase().includes('g29') || gamepads[i].id.toLowerCase().includes('wheel'))) {
+                    gamepadIndex = i;
+                    wheelName.textContent = gamepads[i].id.toUpperCase();
+                    inputType.textContent = "G29";
+                    statusText.textContent = "G29 DETECTED";
+                    console.log("G29 Found at index:", i);
+                    break;
+                }
+            }
+            if (gamepadIndex === null) {
+                wheelName.textContent = "NOT FOUND (PRESS A BUTTON ON G29)";
+                inputType.textContent = "KB";
+            }
+        }
+
+        resyncBtn.onclick = () => {
+            findGamepad();
+            if (gamepadIndex !== null) {
+                statusText.textContent = "WHEEL SYNCED";
+                setTimeout(() => {if (socket && socket.readyState === 1) statusText.textContent = "CONNECTED • LIVE";}, 2000);
+            }
+        };
+
+        window.addEventListener("gamepadconnected", (e) => {
+            console.log("Gamepad connected:", e.gamepad.id);
+            findGamepad();
+        });
+
+        window.addEventListener("gamepaddisconnected", (e) => {
+            if (gamepadIndex === e.gamepad.index) {
+                gamepadIndex = null;
+                wheelName.textContent = "DISCONNECTED";
+                inputType.textContent = "KB";
+            }
+        });
+
+        function updateTelemetry() {
+            if (gamepadIndex !== null) {
+                const gp = navigator.getGamepads()[gamepadIndex];
+                if (gp) {
+                    const isG29 = gp.id.toLowerCase().includes('g29') || gp.id.toLowerCase().includes('logitech');
+
+                    let steerAxis = gp.axes[0];
+                    let gasAxis, brakeAxis, clutchAxis;
+
+                    if (isG29) {
+                        // Windows G29 mapping:
+                        // Axis 0: Steering
+                        // Axis 1: Gas
+                        // Axis 2: Brake
+                        // Axis 5 (atau 3): Clutch
+                        gasAxis = gp.axes[1];
+                        brakeAxis = gp.axes[2];
+                        clutchAxis = gp.axes[5] !== undefined ? gp.axes[5] : gp.axes[3];
+                    } else {
+                        // Generic Fallback
+                        gasAxis = gp.axes[1] || 1;
+                        brakeAxis = gp.axes[2] || 1;
+                        clutchAxis = gp.axes[5] || gp.axes[3] || 1;
+                    }
+
+                    let pedalsCalibrated = (gasAxis !== 0 || brakeAxis !== 0 || clutchAxis !== 0);
+
+                    // Normalize Pedals: 1.0 (Idle) -> 0.0, -1.0 (Full Press) -> 1.0
+                    const normalizePedal = (val) => {
+                        if (val === undefined || (!pedalsCalibrated && val === 0)) return 0;
+                        let normalized = (val - 1) / -2;
+                        return Math.max(0, Math.min(1, normalized)); // Clamp 0 to 1
+                    };
+
+                    const gasReal = normalizePedal(gasAxis);
+                    const brakeReal = normalizePedal(brakeAxis);
+                    const clutchReal = normalizePedal(clutchAxis);
+
+                    // Visual Wheel Rotation
+                    const angle = steerAxis * 90;
+                    wheelViz.style.transform = `rotate(${angle}deg)`;
+                    wheelLabel.textContent = `STEERING ANGLE: ${Math.round(angle)}°`;
+
+                    // Visual Pedal Boxes
+                    gasFill.style.height = (gasReal * 100) + "%";
+                    brakeFill.style.height = (brakeReal * 100) + "%";
+                    clutchFill.style.height = (clutchReal * 100) + "%";
+
+                    gasValText.textContent = Math.round(gasReal * 100) + "%";
+                    brakeValText.textContent = Math.round(brakeReal * 100) + "%";
+                    clutchValText.textContent = Math.round(clutchReal * 100) + "%";
+
+                    // --- Incremental Steering Pulses (Tick-Based) ---
+                    const currentSteerIndex = Math.round((steerAxis + 1) * 50);
+                    let steeringPulseChar = null;
+
+                    if (currentSteerIndex !== lastSteerIndex) {
+                        const diff = currentSteerIndex - lastSteerIndex;
+                        const pulses = Math.min(Math.abs(diff), 2);
+                        steeringPulseChar = diff > 0 ? 'L' : 'R';
+
+                        for (let i = 0; i < pulses; i++) {
+                            sendCommand(steeringPulseChar);
+                        }
+                        lastSteerIndex = currentSteerIndex;
+                    }
+
+                    // --- Sharp Turn Logic ---
+                    let currentSteerState = 'x';
+                    if (steerAxis < -0.5) currentSteerState = 'a';
+                    else if (steerAxis > 0.5) currentSteerState = 'd';
+
+                    if (currentSteerState !== lastSteerState) {
+                        if (currentSteerState === 'x') {
+                            sendCommand('c');
+                        } else {
+                            sendCommand(currentSteerState);
+                        }
+                        lastSteerState = currentSteerState;
+                    }
+
+                    // --- Direct Control Logic ---
+                    // GAS  = MAJU ('F')
+                    // KOPLING = MUNDUR ('B')
+                    let cmd = 'x';
+                    let sendVal = 0;
+
+                    if (gasReal > 0.05) {
+                        cmd = 'F';
+                        sendVal = Math.round(gasReal * 255);
+                    } else if (clutchReal > 0.05) {
+                        cmd = 'B';
+                        sendVal = Math.round(clutchReal * 255);
+                    }
+
+                    // Dashboard UI sync: F = Gas (Maju/W), B = Kopling (Mundur/S)
+                    let kbSyncCmd = 'x';
+                    if (cmd === 'F' && sendVal > 20) kbSyncCmd = 'w';
+                    else if (cmd === 'B' && sendVal > 20) kbSyncCmd = 's';
+
+                    // --- Combined Command Logic ---
+                    let steerSuffix = currentSteerState === 'x' ? '' : currentSteerState;
+                    let currentFullCmd = (cmd === 'x' ? 'x' : cmd + sendVal) + steerSuffix;
+
+                    if (cmd === 'x' && currentSteerState === 'x' && lastSteerState !== 'x') {
+                        currentFullCmd = 'c';
+                    }
+
+                    if (currentFullCmd !== lastCmd && activeKeys.size === 0) {
+                        sendCommand(currentFullCmd);
+                        lastSteerState = currentSteerState;
+                    }
+
+                    // --- Visual Keyboard State ---
+                    if (activeKeys.size === 0) {
+                        Object.values(keys).forEach(k => k.classList.remove('active'));
+
+                        if (currentSteerState !== 'x' && keys[currentSteerState]) {
+                            keys[currentSteerState].classList.add('active');
+                        }
+
+                        if (kbSyncCmd !== 'x' && keys[kbSyncCmd]) {
+                            keys[kbSyncCmd].classList.add('active');
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(updateTelemetry);
+        }
+
+        updateTelemetry();
+    </script>
+</body>
+
+</html>
