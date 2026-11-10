@@ -6,8 +6,8 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // ===== WIFI =====
-const char* ssid     = "ICT-LAB WORKSPACE";
-const char* password = "ICTLAB2024";
+const char* ssid     = "ROVER-LINK";
+const char* password = "rover123";
 
 // ===== WEBSOCKET =====
 WebSocketsServer webSocket(81);
